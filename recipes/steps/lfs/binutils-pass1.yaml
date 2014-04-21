@@ -1,0 +1,28 @@
+#
+# First Binutils compile
+#
+
+- init:
+  - lfs_extract: binutils
+  - exec_out: mkdir -v binutils-build
+  - exec_out: cd binutils-build
+
+- build:
+  # TODO handles different version automaticaly
+  - exec_out: |
+      ../binutils-2.24/configure     \
+          --prefix=/tools            \
+          --with-sysroot=$LFS        \
+          --with-lib-path=/tools/lib \
+          --target=$LFS_TGT          \
+          --disable-nls              \
+          --disable-werror
+
+  - exec_out: make
+  # If building on x86_64, create a symlink to ensure the sanity of the
+  # toolchain
+  - exec_out: |
+      case $(uname -m) in
+      x86_64) mkdir -v /tools/lib && ln -sv lib /tools/lib64 ;;
+      esac
+  - exec_out: make install

@@ -1,0 +1,5 @@
+#
+# Init build process
+#
+- go_to_source_folder:
+  - exec_out: cd $LFS/sources

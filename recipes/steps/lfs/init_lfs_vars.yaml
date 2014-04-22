@@ -2,24 +2,28 @@
 # Initialize LFS variables
 #
 
-- LFS: $$rootfs
+- LFS: $$rootfs_cache
 - cores: 2
 
-- export_vars:
-  - exec_out: export LFS=$$LFS
-  - exec_out: export MAKEFLAGS='-j $$cores'
-
 - create_folders:
-  - exec_out: mkdir -v $LFS/tools
-  - exec_out: ln -sv $LFS/tools /
-  - exec_out: mkdir -v $LFS/sources
-  - exec_out: chmod -v a+wt $LFS/sources
+  - exec_out: mkdir -vp $$LFS/tools
+  - exec_out: ln -sv $$LFS/tools /tools
+  - on_setup_clean:
+    - exec_out: rm /tools
+  - exec_out: mkdir -vp $$LFS/sources
+  - exec_out: chmod -v a+wt $$LFS/sources
 
 - init_lfs_user:
   - exec_out: groupadd lfs
   - exec_out: useradd -s /bin/bash -g lfs -m -k /dev/null lfs
-  - exec_out: chown -v lfs $LFS/tools
-  - exec_out: chown -v lfs $LFS/sources
+  - on_setup_clean:
+    - exec_out: userdel -r lfs
+    - exec_out: groupdel lfs
+  - exec_out: chown -v lfs $$LFS/tools
+  - exec_out: chown -v lfs $$LFS/sources
+  # FIXME this is a workaround for kameleon bug
+  # https://github.com/oar-team/kameleon/issues/3
+  - exec_out: chown -v lfs /tmp/kameleon_*
   - exec_out: su - lfs
   - exec_out: |
       cat > ~/.bash_profile << "EOF"
@@ -34,5 +38,7 @@
       LFS_TGT=$(uname -m)-lfs-linux-gnu
       PATH=/tools/bin:/bin:/usr/bin
       export LFS LC_ALL LFS_TGT PATH
+      export LFS=$$LFS
+      export MAKEFLAGS='-j $$cores'
       EOF
   - exec_out: source ~/.bash_profile

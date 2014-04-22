@@ -2,9 +2,9 @@
 # vim: softtabstop=2 shiftwidth=2 expandtab fenc=utf-8 cc=81 tw=80
 #==============================================================================
 #
-# RECIPE: archlinux-2014
+# RECIPE: lfs-7.5-systemd
 #
-# DESCRIPTION: Build an Archlinux appliance using chroot and qemu-nbd.
+# DESCRIPTION: Build an LFS appliance using chroot and qemu-nbd.
 #
 # TEMPLATE: archlinux-2014
 #
@@ -19,7 +19,7 @@ checkpoint: qcow2.yaml
 global:
   ## User varibales : used by the recipe
   rootfs: $$kameleon_cwd/rootfs
-  rootfs_cache: /var/cache/kameleon/arch
+  rootfs_cache: $$kameleon_cwd/rootfs_cache
   arch: x86_64
   dns: 208.67.222.222
   user_name: kameleon
@@ -27,7 +27,7 @@ global:
   nbd_device: /dev/nbd4
   container: "$${kameleon_recipe_name}_temp.qcow2"
 
-  distrib: archlinux
+  distrib: lfs
 
   ## System variables. Required by kameleon engine
   # Include specific steps
@@ -52,7 +52,7 @@ global:
 bootstrap:
   - check_requirements
   - init_lfs_vars:
-    - LFS: .
+    - LFS: $$rootfs_cache
     - cores: 2
   - get_packages
   - binutils-pass1
@@ -66,31 +66,31 @@ bootstrap:
     - mountdir: $$rootfs
     - filesystem_type: ext4
   - start_chroot
-  - install_bootloader:
-    - mountdir: $$rootfs
-    - device: $$nbd_device
+#  - install_bootloader:
+#    - mountdir: $$rootfs
+#    - device: $$nbd_device
 
 #== Install and configuration steps
 # WARNING: this part should be independante from the out context (whenever
 # possible...)
-setup:
-  # Install
-  - software_install:
-    - packages: >
-        ntp zip unzip rsync sudo vim bash-completion openssh
-  # Configuration
-  - system_config:
-    - locales: fr_FR en_US
-    - lang: fr_FR.UTF-8
-    - timezone: Europe/Paris
-  - keyboard_config:
-    # set to french keyboard use 'localectl list-keymaps' to see available list
-    - layout: fr
-  - network_config:
-    - hostname: kameleon-$$distrib
-  - create_user:
-    - name: $$user_name
-    - password: $$user_name
+#setup:
+#  # Install
+#  - software_install:
+#    - packages: >
+#        ntp zip unzip rsync sudo vim bash-completion openssh
+#  # Configuration
+#  - system_config:
+#    - locales: fr_FR en_US
+#    - lang: fr_FR.UTF-8
+#    - timezone: Europe/Paris
+#  - keyboard_config:
+#    # set to french keyboard use 'localectl list-keymaps' to see available list
+#    - layout: fr
+#  - network_config:
+#    - hostname: kameleon-$$distrib
+#  - create_user:
+#    - name: $$user_name
+#    - password: $$user_name
 
 #== Export the generated appliance in the format of your choice
 export:

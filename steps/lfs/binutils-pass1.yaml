@@ -5,7 +5,7 @@
 - init:
   - lfs_extract: binutils
   - exec_out: mkdir -v binutils-build
-  - exec_out: cd binutils-build
+  - exec_out: pushd binutils-build
 
 - build:
   # TODO handles different version automaticaly

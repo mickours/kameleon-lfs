@@ -1,0 +1,37 @@
+#==============================================================================
+# vim: softtabstop=2 shiftwidth=2 expandtab fenc=utf-8 cc=81 tw=80
+#==============================================================================
+#
+# RECIPE: lfs-7.5-systemd
+#
+# DESCRIPTION: Build an LFS appliance using chroot and qemu-nbd.
+#
+# TEMPLATE: archlinux-2014
+#
+#==============================================================================
+
+---
+global:
+  arch: x86_64
+
+  LFS: $$kameleon_cwd/rootfs
+
+  # must be the version number like specified in
+  # http://www.linuxfromscratch.org/lfs/view/
+  lfs_version: stable-systemd
+
+  distrib: lfs
+
+  include_steps:
+    - $$distrib
+
+  cores: 4
+
+  out_context:
+    cmd: exec env -i HOME=$HOME TERM=$TERM PS1='\u:\w\$' /bin/bash --init-file bashrc
+
+bootstrap:
+  - init_lfs_vars
+  - check_requirements
+  - get_packages
+  - binutils-pass1

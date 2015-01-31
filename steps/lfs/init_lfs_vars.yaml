@@ -1,0 +1,52 @@
+#
+# Initialize LFS variables
+#
+- create_out_bashrc:
+  - exec_local: |
+      cat > bashrc << "EOF"
+      set +h
+      umask 022
+      LFS=$$LFS
+      LC_ALL=POSIX
+      LFS_TGT=$(uname -m)-lfs-linux-gnu
+      PATH=/tools/bin:/bin:/usr/bin
+      export LFS LC_ALL LFS_TGT PATH
+      export MAKEFLAGS='-j $$cores'
+      EOF
+
+
+- create_folders:
+  - exec_out: mkdir -vp $LFS/tools
+  # FIXME May be required...
+  #- exec_out: ln -sv / $$LFS/tools
+  #- on_setup_clean:
+  #  - exec_out: rm /tools
+  - exec_out: mkdir -vp $LFS/sources
+  - exec_out: chmod -v a+wt $LFS/sources
+
+  #- init_lfs_user:
+  #  - exec_out: groupadd lfs
+  #  - exec_out: useradd -s /bin/bash -g lfs -m -k /dev/null lfs
+  #  - on_setup_clean:
+  #    - exec_out: userdel -r lfs
+  #    - exec_out: groupdel lfs
+  #  - exec_out: chown -v lfs $$LFS/tools
+  #  - exec_out: chown -v lfs $$LFS/sources
+  #  - exec_out: |
+  #      cat > /home/lfs/.bash_profile << "EOF"
+  #      exec env -i HOME=$HOME TERM=$TERM PS1='\u:\w\$ ' /bin/bash
+  #      EOF
+  #  - exec_out: |
+  #      cat > /home/lfs/.bashrc << "EOF"
+  #      set +h
+  #      umask 022
+  #      LFS=/mnt/lfs
+  #      LC_ALL=POSIX
+  #      LFS_TGT=$(uname -m)-lfs-linux-gnu
+  #      PATH=/tools/bin:/bin:/usr/bin
+  #      export LFS LC_ALL LFS_TGT PATH
+  #      export LFS=$$LFS
+  #      export MAKEFLAGS='-j $$cores'
+  #      EOF
+  #  # This should be started with the lfs context
+  #  - exec_out: su - lfs

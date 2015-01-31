@@ -4,15 +4,13 @@
 # From: 3.1. Introduction
 # To: 4.2
 
-# must be the version number like specified in
-# http://www.linuxfromscratch.org/lfs/view/
-- lfs_version: stable-systemd
 
 - get_packages:
-  - exec_out: wget -O wget-list http://www.linuxfromscratch.org/lfs/view/$$lfs_version/wget-list
+  - exec_out: "wget http://www.linuxfromscratch.org/lfs/view/$$lfs_version/wget-list"
   - exec_out: wget -i wget-list -P $LFS/sources
 
 - check_packages:
+  - exec_out: "wget http://www.linuxfromscratch.org/lfs/view/$$lfs_version/md5sums"
   - exec_out: |
       pushd $LFS/sources
       md5sum -c md5sums

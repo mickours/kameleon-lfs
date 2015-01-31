@@ -1,0 +1,3 @@
+echo The 'out_context' has been initialized
+mkdir -vp $LFS/tools
+env

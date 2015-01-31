@@ -1,0 +1,140 @@
+--- 
+name: lfs-7.5-systemd
+path: /debian_home/mercierm/Projects/kameleon-lfs/lfs-7.5-systemd.yaml
+files: 
+- /debian_home/mercierm/Projects/kameleon-lfs/steps/lfs/init_lfs_vars.yaml
+- /debian_home/mercierm/Projects/kameleon-lfs/steps/lfs/check_requirements.yaml
+- /debian_home/mercierm/Projects/kameleon-lfs/steps/lfs/get_packages.yaml
+- /debian_home/mercierm/Projects/kameleon-lfs/steps/lfs/binutils-pass1.yaml
+base_recipes_files: 
+- /debian_home/mercierm/Projects/kameleon-lfs/lfs-7.5-systemd.yaml
+global: 
+  kameleon_recipe_name: lfs-7.5-systemd
+  kameleon_recipe_dir: /debian_home/mercierm/Projects/kameleon-lfs
+  kameleon_uuid: 8ada5e02-97b2-4c49-90e2-754d6155fb6a
+  kameleon_short_uuid: 754d6155fb6a
+  kameleon_cwd: /debian_home/mercierm/Projects/kameleon-lfs/build/lfs-7.5-systemd
+  in_context: 
+    cmd: /bin/bash
+  out_context: 
+    cmd: exec env -i HOME=$HOME TERM=$TERM PS1='\u:\w\$' /bin/bash --init-file bashrc
+  arch: x86_64
+  LFS: /debian_home/mercierm/Projects/kameleon-lfs/build/lfs-7.5-systemd/rootfs
+  lfs_version: stable-systemd
+  distrib: lfs
+  include_steps: 
+  - lfs
+  - ""
+  cores: 4
+aliases: {}
+
+steps: 
+- bootstrap/init_lfs_vars/create_out_bashrc: 
+    identifier: e2ed75fc8a2f
+    cmds: 
+    - exec_local: |-
+        cat > bashrc << "EOF"
+        set +h
+        umask 022
+        LFS=/debian_home/mercierm/Projects/kameleon-lfs/build/lfs-7.5-systemd/rootfs
+        LC_ALL=POSIX
+        LFS_TGT=$(uname -m)-lfs-linux-gnu
+        PATH=/tools/bin:/bin:/usr/bin
+        export LFS LC_ALL LFS_TGT PATH
+        export MAKEFLAGS='-j 4'
+        EOF
+- bootstrap/init_lfs_vars/create_folders: 
+    identifier: 469df0700668
+    cmds: 
+    - exec_out: mkdir -vp $LFS/tools
+    - exec_out: mkdir -vp $LFS/sources
+    - exec_out: chmod -v a+wt $LFS/sources
+- bootstrap/check_requirements/check_script: 
+    identifier: 0836e7744a5d
+    cmds: 
+    - exec_out: |-
+        cat > version-check.sh << "EOF"
+        #!/bin/bash
+        # Simple script to list version numbers of critical development tools
+        
+        export LC_ALL=C
+        bash --version | head -n1 | cut -d" " -f2-4
+        echo "/bin/sh -> `readlink -f /bin/sh`"
+        echo -n "Binutils: "; ld --version | head -n1 | cut -d" " -f3-
+        bison --version | head -n1
+        if [ -e /usr/bin/yacc ];
+          then echo "/usr/bin/yacc -> `readlink -f /usr/bin/yacc`";
+          else echo "yacc not found"; fi
+        
+        bzip2 --version 2>&1 < /dev/null | head -n1 | cut -d" " -f1,6-
+        echo -n "Coreutils: "; chown --version | head -n1 | cut -d")" -f2
+        diff --version | head -n1
+        find --version | head -n1
+        gawk --version | head -n1
+        if [ -e /usr/bin/awk ];
+          then echo "/usr/bin/awk -> `readlink -f /usr/bin/awk`";
+          else echo "awk not found"; fi
+        
+        gcc --version | head -n1
+        g++ --version | head -n1
+        ldd --version | head -n1 | cut -d" " -f2-  # glibc version
+        grep --version | head -n1
+        gzip --version | head -n1
+        cat /proc/version
+        m4 --version | head -n1
+        make --version | head -n1
+        patch --version | head -n1
+        echo Perl `perl -V:version`
+        sed --version | head -n1
+        tar --version | head -n1
+        xz --version | head -n1
+        
+        echo 'main(){}' > dummy.c && g++ -o dummy dummy.c
+        if [ -x dummy ]
+          then echo "g++ compilation OK";
+          else echo "g++ compilation failed"; fi
+        rm -f dummy.c dummy
+        
+        for lib in lib{gmp,mpfr,mpc}.la; do
+          echo $lib: $(if find /usr/lib* -name $lib|
+                       grep -q $lib;then :;else echo not;fi) found
+        done
+        unset lib
+        EOF
+    - exec_out: bash version-check.sh
+- bootstrap/get_packages/get_packages: 
+    identifier: eb712e56e9c7
+    cmds: 
+    - exec_out: wget http://www.linuxfromscratch.org/lfs/view/stable-systemd/wget-list
+    - exec_out: wget -i wget-list -P $LFS/sources
+- bootstrap/get_packages/check_packages: 
+    identifier: a3aab187ca0e
+    cmds: 
+    - exec_out: wget http://www.linuxfromscratch.org/lfs/view/stable-systemd/md5sums
+    - exec_out: |-
+        pushd $LFS/sources
+        md5sum -c md5sums
+        popd
+- bootstrap/binutils-pass1/init: 
+    identifier: a2923a2a814c
+    cmds: 
+    - lfs_extract: binutils
+    - exec_out: mkdir -v binutils-build
+    - exec_out: pushd binutils-build
+- bootstrap/binutils-pass1/build: 
+    identifier: 23c2bd292170
+    cmds: 
+    - exec_out: |-
+        ../binutils-2.24/configure     \
+            --prefix=/tools            \
+            --with-sysroot=$LFS        \
+            --with-lib-path=/tools/lib \
+            --target=$LFS_TGT          \
+            --disable-nls              \
+            --disable-werror
+    - exec_out: make
+    - exec_out: |-
+        case $(uname -m) in
+        x86_64) mkdir -v /tools/lib && ln -sv lib /tools/lib64 ;;
+        esac
+    - exec_out: make install
